@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Horarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .btn-primary {
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+        }
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-100 p-3 rounded-xl">
+                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Control de Horarios</h1>
+                        <p class="text-gray-500 text-sm">Sistema de marcación de personal</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-sm text-gray-500">Fecha</div>
+                        <div class="text-lg font-semibold text-gray-800" id="currentDate"></div>
+                    </div>
+                    <button onclick="toggleSettings()" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl transition-colors">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Estado de conexión -->
+            <div class="mt-4 flex items-center gap-2" id="connectionStatus">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                </svg>
+                <span class="text-amber-600 text-sm font-semibold" id="statusText">No configurado - Solo guardado local</span>
+            </div>
+        </div>
+
+        <!-- Panel de Configuración -->
+        <div id="settingsPanel" class="bg-white rounded-2xl shadow-xl p-6 mb-6 hidden">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">⚙️ Configuración de Google Sheets</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        URL del Web App de Google Apps Script
+                    </label>
+                    <input
+                        type="text"
+                        id="sheetsUrlInput"
+                        placeholder="https://script.google.com/macros/s/AKfycby..."
+                        class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:outline-none"
+                    />
+                    <p class="text-sm text-gray-500 mt-2">
+                        📝 Pega aquí la URL que obtuviste al implementar el Apps Script
+                    </p>
+                </div>
+                <div class="flex gap-3">
+                    <button
+                        onclick="saveConfiguration()"
+                        class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                    >
+                        Guardar Configuración
+                    </button>
+                    <button
+                        onclick="resetConfiguration()"
+                        class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                        id="resetBtn"
+                    >
+                        Resetear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <!-- Selector de Empleado -->
+            <div class="mb-6">
+                <label class="flex items-center gap-2 text-gray-700 font-semibold mb-3">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    Seleccionar Personal
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="employeeList"></div>
+            </div>
+
+            <!-- Selector de Lugar -->
+            <div class="mb-8">
+                <label class="flex items-center gap-2 text-gray-700 font-semibold mb-3">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Lugar de Trabajo
+                </label>
+                <select
+                    id="locationSelect"
+                    class="w-full p-4 border-2 border-gray-200 rounded-xl text-gray-800 font-medium focus:border-indigo-500 focus:outline-none transition-colors"
+                >
+                    <option value="">Seleccionar lugar...</option>
+                    <option value="Oficina Central">Oficina Central</option>
+                    <option value="Sucursal Norte">Sucursal Norte</option>
+                    <option value="Trabajo Remoto">Trabajo Remoto</option>
+                    <option value="Cliente">Cliente</option>
+                </select>
+            </div>
+
+            <!-- Botones de Entrada/Salida -->
+            <div class="grid grid-cols-2 gap-4">
+                <button
+                    onclick="handleCheckIn('entrada')"
+                    class="btn-primary flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white font-bold py-6 px-8 rounded-xl shadow-lg"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span id="btnEntradaText">ENTRADA</span>
+                </button>
+                <button
+                    onclick="handleCheckIn('salida')"
+                    class="btn-primary flex items-center justify-center gap-3 bg-red-500 hover:bg-red-600 text-white font-bold py-6 px-8 rounded-xl shadow-lg"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span id="btnSalidaText">SALIDA</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <button
+                    onclick="toggleHistory()"
+                    class="text-lg font-bold text-gray-800 hover:text-indigo-600 transition-colors"
+                >
+                    📋 Historial Local (<span id="recordCount">0</span>)
+                </button>
+                <div class="flex gap-2">
+                    <button
+                        onclick="exportToCSV()"
+                        class="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Exportar CSV
+                    </button>
+                    <button
+                        onclick="clearHistory()"
+                        class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div id="historyPanel" class="mt-4 space-y-2 max-h-96 overflow-y-auto hidden"></div>
+        </div>
+
+        <!-- Instrucciones -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+            <strong>💡 Instrucciones:</strong>
+            <ul class="mt-2 space-y-1 list-disc list-inside">
+                <li>Haz clic en el ícono ⚙️ para configurar Google Sheets</li>
+                <li>Pega la URL de tu Web App de Google Apps Script</li>
+                <li>Los datos se guardarán automáticamente en tu hoja de cálculo</li>
+                <li>También se guarda una copia local como respaldo</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Configuración
+        const employees = ['Leonardo', 'Pedrito', 'Jauncito'];
+        let selectedEmployee = '';
+        let records = [];
+        let sheetsUrl = '';
+        let isConfigured = false;
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfiguration();
+            loadRecords();
+            renderEmployees();
+            updateDate();
+            updateConnectionStatus();
+        });
+
+        function updateDate() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('es-AR');
+        }
+
+        function renderEmployees() {
+            const container = document.getElementById('employeeList');
+            container.innerHTML = employees.map(emp => `
+                <label class="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all border-gray-200 hover:border-indigo-300 hover:bg-gray-50" id="emp-${emp}">
+                    <input type="radio" name="employee" value="${emp}" onchange="selectEmployee('${emp}')" class="w-5 h-5 text-indigo-600">
+                    <span class="font-medium text-gray-800">${emp}</span>
+                </label>
+            `).join('');
+        }
+
+        function selectEmployee(emp) {
+            selectedEmployee = emp;
+            employees.forEach(e => {
+                const label = document.getElementById(`emp-${e}`);
+                if (e === emp) {
+                    label.className = 'flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all border-indigo-500 bg-indigo-50';
+                } else {
+                    label.className = 'flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all border-gray-200 hover:border-indigo-300 hover:bg-gray-50';
+                }
+            });
+        }
+
+        function loadConfiguration() {
+            const saved = localStorage.getItem('googleSheetsUrl');
+            if (saved) {
+                sheetsUrl = saved;
+                isConfigured = true;
+                document.getElementById('sheetsUrlInput').value = saved;
+            }
+        }
+
+        function updateConnectionStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (isConfigured) {
+                statusDiv.innerHTML = `
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-green-600 text-sm font-semibold">Conectado a Google Sheets</span>
+                `;
+            }
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function saveConfiguration() {
+            const url = document.getElementById('sheetsUrlInput').value.trim();
+            if (!url) {
+                alert('Por favor ingresa la URL de Google Sheets');
+                return;
+            }
+            if (!url.includes('script.google.com')) {
+                alert('⚠️ La URL debe ser de Google Apps Script (script.google.com)');
+                return;
+            }
+            localStorage.setItem('googleSheetsUrl', url);
+            sheetsUrl = url;
+            isConfigured = true;
+            updateConnectionStatus();
+            toggleSettings();
+            alert('✓ Configuración guardada correctamente');
+        }
+
+        function resetConfiguration() {
+            if (confirm('¿Deseas eliminar la configuración de Google Sheets?')) {
+                localStorage.removeItem('googleSheetsUrl');
+                sheetsUrl = '';
+                isConfigured = false;
+                document.getElementById('sheetsUrlInput').value = '';
+                updateConnectionStatus();
+                alert('✓ Configuración eliminada');
+            }
+        }
+
+        async function sendToGoogleSheets(record) {
+            if (!isConfigured) return false;
+            
+            try {
+                await fetch(sheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(record)
+                });
+                return true;
+            } catch (error) {
+                console.error('Error al enviar a Google Sheets:', error);
+                return false;
+            }
+        }
+
+        function loadRecords() {
+            const saved = localStorage.getItem('timeRecords');
+            if (saved) {
+                records = JSON.parse(saved);
+                updateRecordCount();
+                renderHistory();
+            }
+        }
+
+        function saveRecords() {
+            localStorage.setItem('timeRecords', JSON.stringify(records));
+            updateRecordCount();
+            renderHistory();
+        }
+
+        function updateRecordCount() {
+            document.getElementById('recordCount').textContent = records.length;
+        }
+
+        async function handleCheckIn(type) {
+            const location = document.getElementById('locationSelect').value;
+            
+            if (!selectedEmployee) {
+                alert('Por favor selecciona un empleado');
+                return;
+            }
+            if (!location) {
+                alert('Por favor selecciona un lugar de trabajo');
+                return;
+            }
+
+            // Deshabilitar botones
+            const btnTexts = {
+                entrada: document.getElementById('btnEntradaText'),
+                salida: document.getElementById('btnSalidaText')
+            };
+            btnTexts[type].textContent = 'ENVIANDO...';
+
+            const now = new Date();
+            const record = {
+                id: Date.now(),
+                employee: selectedEmployee,
+                location: location,
+                type: type,
+                date: now.toLocaleDateString('es-AR'),
+                time: now.toLocaleTimeString('es-AR'),
+                timestamp: now.toISOString()
+            };
+
+            // Guardar localmente
+            records.unshift(record);
+            saveRecords();
+
+            // Enviar a Google Sheets
+            let message = `✓ ${type === 'entrada' ? 'Entrada' : 'Salida'} registrada para ${selectedEmployee}`;
+            if (isConfigured) {
+                const success = await sendToGoogleSheets(record);
+                if (success) {
+                    message += '\n📊 Datos enviados a Google Sheets';
+                } else {
+                    message += '\n⚠️ Guardado localmente (verifica la conexión a Google Sheets)';
+                }
+            } else {
+                message += '\n⚠️ Solo guardado localmente. Configura Google Sheets para sincronizar.';
+            }
+
+            alert(message);
+            btnTexts[type].textContent = type.toUpperCase();
+        }
+
+        function toggleHistory() {
+            const panel = document.getElementById('historyPanel');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const panel = document.getElementById('historyPanel');
+            if (records.length === 0) {
+                panel.innerHTML = '<p class="text-gray-500 text-center py-8">No hay registros aún</p>';
+            } else {
+                panel.innerHTML = records.map(record => `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-3 h-3 rounded-full ${record.type === 'entrada' ? 'bg-green-500' : 'bg-red-500'}"></div>
+                            <div>
+                                <div class="font-semibold text-gray-800">${record.employee}</div>
+                                <div class="text-sm text-gray-500">${record.location}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold ${record.type === 'entrada' ? 'text-green-600' : 'text-red-600'}">
+                                ${record.type.toUpperCase()}
+                            </div>
+                            <div class="text-sm text-gray-500">${record.date} ${record.time}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function exportToCSV() {
+            if (records.length === 0) {
+                alert('No hay registros para exportar');
+                return;
+            }
+
+            const headers = ['Empleado', 'Tipo', 'Fecha', 'Hora', 'Lugar', 'Timestamp'];
+            const csv = [
+                headers.join(','),
+                ...records.map(r => 
+                    [r.employee, r.type, r.date, r.time, r.location, r.timestamp].join(',')
+                )
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `marcaciones_${new Date().toLocaleDateString('es-AR').replace(/\//g, '-')}.csv`;
+            link.click();
+        }
+
+        function clearHistory() {
+            if (confirm('¿Estás seguro de borrar todo el historial LOCAL? (No borra Google Sheets)')) {
+                records = [];
+                saveRecords();
+                renderHistory();
+            }
+        }
+    </script>
+</body>
+</html>
